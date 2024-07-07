@@ -1,0 +1,95 @@
+#include <iostream>
+#include <vector>
+#include <string>
+
+struct Task {
+    std::string description;
+    bool completed;
+
+    Task(const std::string& desc) : description(desc), completed(false) {}
+};
+
+void addTask(std::vector<Task>& tasks) {
+    std::cout << "Enter task description: ";
+    std::string description;
+    std::getline(std::cin, description);
+    tasks.emplace_back(description);
+}
+
+void viewTasks(const std::vector<Task>& tasks) {
+    if (tasks.empty()) {
+        std::cout << "No tasks available.\n";
+        return;
+    }
+    std::cout << "Tasks:\n";
+    for (size_t i = 0; i < tasks.size(); ++i) {
+        std::cout << i + 1 << ". " << tasks[i].description
+            << " [" << (tasks[i].completed ? "Completed" : "Pending") << "]\n";
+    }
+}
+
+void markTaskCompleted(std::vector<Task>& tasks) {
+    viewTasks(tasks);
+    std::cout << "Enter task number to mark as completed: ";
+    size_t taskNumber;
+    std::cin >> taskNumber;
+    std::cin.ignore(); // ignore leftover newline character
+    if (taskNumber > 0 && taskNumber <= tasks.size()) {
+        tasks[taskNumber - 1].completed = true;
+        std::cout << "Task marked as completed.\n";
+    }
+    else {
+        std::cout << "Invalid task number.\n";
+    }
+}
+
+void removeTask(std::vector<Task>& tasks) {
+    viewTasks(tasks);
+    std::cout << "Enter task number to remove: ";
+    size_t taskNumber;
+    std::cin >> taskNumber;
+    std::cin.ignore(); // ignore leftover newline character
+    if (taskNumber > 0 && taskNumber <= tasks.size()) {
+        tasks.erase(tasks.begin() + taskNumber - 1);
+        std::cout << "Task removed.\n";
+    }
+    else {
+        std::cout << "Invalid task number.\n";
+    }
+}
+
+int main() {
+    std::vector<Task> tasks;
+    while (true) {
+        std::cout << "\nTo-Do List Manager\n";
+        std::cout << "1. Add Task\n";
+        std::cout << "2. View Tasks\n";
+        std::cout << "3. Mark Task as Completed\n";
+        std::cout << "4. Remove Task\n";
+        std::cout << "5. Exit\n";
+        std::cout << "Choose an option: ";
+        int option;
+        std::cin >> option;
+        std::cin.ignore(); // ignore leftover newline character
+
+        switch (option) {
+        case 1:
+            addTask(tasks);
+            break;
+        case 2:
+            viewTasks(tasks);
+            break;
+        case 3:
+            markTaskCompleted(tasks);
+            break;
+        case 4:
+            removeTask(tasks);
+            break;
+        case 5:
+            std::cout << "Exiting...\n";
+            return 0;
+        default:
+            std::cout << "Invalid option. Please try again.\n";
+        }
+    }
+}
