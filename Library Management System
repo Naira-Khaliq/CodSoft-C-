@@ -1,0 +1,193 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <ctime>
+
+class Book {
+public:
+    std::string title;
+    std::string author;
+    std::string isbn;
+    bool is_checked_out;
+
+    Book(std::string t, std::string a, std::string i)
+        : title(t), author(a), isbn(i), is_checked_out(false) {}
+};
+
+class Library {
+private:
+    std::vector<Book> books;
+    std::unordered_map<std::string, time_t> borrowed_books;
+
+public:
+    void addBook(const Book& book) {
+        books.push_back(book);
+    }
+
+    std::vector<Book> searchBookByTitle(const std::string& title) {
+        std::vector<Book> result;
+        for (const auto& book : books) {
+            if (book.title == title) {
+                result.push_back(book);
+            }
+        }
+        return result;
+    }
+
+    std::vector<Book> searchBookByAuthor(const std::string& author) {
+        std::vector<Book> result;
+        for (const auto& book : books) {
+            if (book.author == author) {
+                result.push_back(book);
+            }
+        }
+        return result;
+    }
+
+    Book* searchBookByISBN(const std::string& isbn) {
+        for (auto& book : books) {
+            if (book.isbn == isbn) {
+                return &book;
+            }
+        }
+        return nullptr;
+    }
+
+    bool checkoutBook(const std::string& isbn, time_t borrow_time) {
+        Book* book = searchBookByISBN(isbn);
+        if (book && !book->is_checked_out) {
+            book->is_checked_out = true;
+            borrowed_books[isbn] = borrow_time;
+            return true;
+        }
+        return false;
+    }
+
+    bool returnBook(const std::string& isbn, time_t return_time) {
+        Book* book = searchBookByISBN(isbn);
+        if (book && book->is_checked_out) {
+            book->is_checked_out = false;
+            borrowed_books.erase(isbn);
+            return true;
+        }
+        return false;
+    }
+
+    double calculateFine(const std::string& isbn, time_t current_time) {
+        const double fine_per_day = 1.0; // 1 currency unit per day
+        time_t borrow_time = borrowed_books[isbn];
+        double days_overdue = difftime(current_time, borrow_time) / (60 * 60 * 24);
+        if (days_overdue > 0) {
+            return days_overdue * fine_per_day;
+        }
+        return 0.0;
+    }
+};
+
+void displayMenu()
+{
+
+    std::cout << "Library Management System \n \n";
+    std::cout << "1. Add Book\n";
+    std::cout << "2. Search Book by Title\n";
+    std::cout << "3. Search Book by Author\n";
+    std::cout << "4. Search Book by ISBN\n";
+    std::cout << "5. Checkout Book\n";
+    std::cout << "6. Return Book\n";
+    std::cout << "7. Calculate Fine\n";
+    std::cout << "8. Exit\n";
+}
+
+int main() {
+    Library library;
+    int choice;
+    std::string title, author, isbn;
+    time_t current_time = time(0);
+
+    do {
+        displayMenu();
+        std::cout << "Enter your choice: ";
+        std::cin >> choice;
+        std::cin.ignore();  // Ignore the newline character left by std::cin
+
+        switch (choice) {
+        case 1:
+            std::cout << "Enter title: ";
+            std::getline(std::cin, title);
+            std::cout << "Enter author: ";
+            std::getline(std::cin, author);
+            std::cout << "Enter ISBN: ";
+            std::getline(std::cin, isbn);
+            library.addBook(Book(title, author, isbn));
+            break;
+
+        case 2:
+            std::cout << "Enter title: ";
+            std::getline(std::cin, title);
+            for (const auto& book : library.searchBookByTitle(title)) {
+                std::cout << "Title: " << book.title << ", Author: " << book.author << ", ISBN: " << book.isbn << "\n";
+            }
+            break;
+
+        case 3:
+            std::cout << "Enter author: ";
+            std::getline(std::cin, author);
+            for (const auto& book : library.searchBookByAuthor(author)) {
+                std::cout << "Title: " << book.title << ", Author: " << book.author << ", ISBN: " << book.isbn << "\n";
+            }
+            break;
+
+        case 4:
+            std::cout << "Enter ISBN: ";
+            std::getline(std::cin, isbn);
+            if (Book* book = library.searchBookByISBN(isbn)) {
+                std::cout << "Title: " << book->title << ", Author: " << book->author << ", ISBN: " << book->isbn << "\n";
+            }
+            else {
+                std::cout << "Book not found.\n";
+            }
+            break;
+
+        case 5:
+            std::cout << "Enter ISBN of the book to checkout: ";
+            std::getline(std::cin, isbn);
+            if (library.checkoutBook(isbn, current_time)) {
+                std::cout << "Book checked out successfully.\n";
+            }
+            else {
+                std::cout << "Book checkout failed.\n";
+            }
+            break;
+
+        case 6:
+            std::cout << "Enter ISBN of the book to return: ";
+            std::getline(std::cin, isbn);
+            if (library.returnBook(isbn, current_time)) {
+                std::cout << "Book returned successfully.\n";
+            }
+            else {
+                std::cout << "Book return failed as the Book record doesnt Exist in System.\n";
+            }
+            break;
+
+        case 7:
+            std::cout << "Enter ISBN to calculate fine: ";
+            std::getline(std::cin, isbn);
+            double fine;
+            fine = library.calculateFine(isbn, current_time);
+            std::cout << "Fine: " << fine << "\n";
+            break;
+
+        case 8:
+            std::cout << "Exiting...\n";
+            break;
+
+        default:
+            std::cout << "Invalid choice. Please try again.\n";
+            break;
+        }
+    } while (choice != 8);
+
+    return 0;
+}
